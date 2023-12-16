@@ -24,7 +24,7 @@ func NewHttpClient() *HttpClient {
 func (c *HttpClient) Get(url string) (*http.Response, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
