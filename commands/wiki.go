@@ -48,8 +48,7 @@ func WikiContent(e *handler.CommandEvent, term string) (ctx WikiContext, err err
 }
 
 func HandleWiki(e *handler.CommandEvent) error {
-	term := e.SlashCommandInteractionData().String("term")
-	context, err := WikiContent(e, term)
+	context, err := WikiContent(e, e.SlashCommandInteractionData().String("term"))
 	return Respond(e, BuildWikiEmbed(e, context))(err)
 }
 
