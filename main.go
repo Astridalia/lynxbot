@@ -2,15 +2,27 @@ package main
 
 import (
 	"fmt"
+	"os"
 
-	"github.com/astridalia/lynxbot/mediawiki"
+	"github.com/astridalia/lynxbot/lynx"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	wikiService := mediawiki.NewWikiService()
-	response, err := wikiService.WikiText("Pet:Stormzilla")
-	if err != nil {
-		panic(err)
+	token, exists := os.LookupEnv("BOT_TOKEN")
+	if !exists {
+		panic("BOT_TOKEN environment variable not set")
 	}
-	fmt.Print(response)
+	bot := lynx.NewBot(token)
+	router := handler.New()
+	bot.Setup(router)
+	ginEngine := gin.New()
+	bot.SetupRoutes(ginEngine)
+	go bot.StartAndBlock()
+	err := ginEngine.Run(":8080")
+	if err != nil {
+		panic(fmt.Sprintf("error while running gin engine: %s", err.Error()))
+	}
+
 }
