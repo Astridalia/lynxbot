@@ -50,24 +50,22 @@ func WikiContent(e *handler.CommandEvent, term string) (ctx WikiContext, err err
 func HandleWiki(e *handler.CommandEvent) error {
 	term := e.SlashCommandInteractionData().String("term")
 	context, err := WikiContent(e, term)
-	if err != nil {
-		return Respond(e, HandleError(err))
+	return Respond(e, BuildWikiEmbed(e, context))(err)
+}
+
+func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) func(err error) error {
+	return func(err error) error {
+		if err != nil {
+			return e.Respond(
+				discord.InteractionResponseTypeCreateMessage,
+				discord.NewMessageCreateBuilder().SetEphemeral(true).SetContent(err.Error()).Build(),
+			)
+		}
+		return e.Respond(
+			discord.InteractionResponseTypeCreateMessage,
+			discord.NewMessageCreateBuilder().SetEmbeds(eb.Build()).SetEphemeral(true).Build(),
+		)
 	}
-	return Respond(e, BuildWikiEmbed(e, context))
-}
-
-func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) error {
-	return e.Respond(
-		discord.InteractionResponseTypeCreateMessage,
-		discord.NewMessageCreateBuilder().SetEmbeds(eb.Build()).SetEphemeral(true).Build(),
-	)
-}
-
-func HandleError(err error) *discord.EmbedBuilder {
-	eb := discord.NewEmbedBuilder()
-	eb.SetDescription("Error: " + err.Error())
-	eb.SetColor(0xFF0000)
-	return eb
 }
 
 func BuildWikiEmbed(e *handler.CommandEvent, ctx WikiContext) *discord.EmbedBuilder {
