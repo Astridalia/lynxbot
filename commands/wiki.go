@@ -37,11 +37,13 @@ func HandleWiki(e *handler.CommandEvent) error {
 	text, err := wiki.Json("TreasureCard:" + term)
 	if err != nil {
 		eb.SetDescription("Error: " + err.Error())
+		return Respond(e, eb)
 	}
 	var ctx WikiContext
 	err = json.Unmarshal(text, &ctx)
 	if err != nil {
-		eb.SetDescription("Error: " + err.Error())
+		HandleError(eb, err)
+		return Respond(e, eb)
 	}
 
 	eb.SetTitle(ctx.Name)
@@ -65,8 +67,18 @@ func HandleWiki(e *handler.CommandEvent) error {
 		},
 	)
 
+	return Respond(e, eb)
+}
+
+func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) error {
 	return e.Respond(
 		discord.InteractionResponseTypeCreateMessage,
 		discord.NewMessageCreateBuilder().SetEmbeds(eb.Build()).SetEphemeral(true).Build(),
 	)
+}
+
+func HandleError(eb *discord.EmbedBuilder, err error) *discord.EmbedBuilder {
+	eb.SetDescription("Error: " + err.Error())
+	eb.SetColor(0xFF0000)
+	return eb
 }
