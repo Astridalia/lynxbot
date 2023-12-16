@@ -37,45 +37,41 @@ func NewWikiService() *WikiService {
 	}
 }
 
-// WikiText returns the WikiText content of the specified page.
 func (s *WikiService) WikiText(pageID string) (WikiResponse, error) {
 	url := fmt.Sprintf("%s?action=parse&page=%s&prop=wikitext|images&formatversion=2&format=json", apiURL, pageID)
-
 	http, err := s.HttpClient.Get(url)
 	if err != nil {
 		return WikiResponse{}, err
 	}
-
 	defer http.Body.Close()
-
-	// Read the response body into a byte slice
-	bodyBytes, err := io.ReadAll(http.Body)
+	api, err := s.wikiText(BodyReader(http.Body))
 	if err != nil {
 		return WikiResponse{}, err
 	}
-
-	api, err := s.wikiText(bodyBytes)
-	if err != nil {
-		return WikiResponse{}, err
-	}
-
 	return *api, nil
 }
 
-// wikiText parses the response body into a WikiResponse struct.
-func (s *WikiService) wikiText(body []byte) (*WikiResponse, error) {
-	api := &WikiResponse{}
-
-	err := json.Unmarshal(body, api)
+func BodyReader(body io.ReadCloser) []byte {
+	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
-		return nil, err
+		return []byte{}
 	}
-	return api, nil
+	return bodyBytes
+}
+
+// wikiText parses the response body into a WikiResponse struct.
+func (s *WikiService) wikiText(body []byte) (w *WikiResponse, err error) {
+	err = json.Unmarshal(body, &w)
+	if err != nil {
+		return &WikiResponse{}, err
+	}
+	return w, nil
 }
 
 // Json converts the infobox in the WikiText content to a JSON string.
-func (s *WikiService) Json(pageID string) ([]byte, error) {
-	wiki, err := s.WikiText(pageID)
+func (s *WikiService) Json(pageID string) (bytes []byte, err error) {
+	var wiki WikiResponse
+	wiki, err = s.WikiText(pageID)
 	if err != nil {
 		return nil, err
 	}
