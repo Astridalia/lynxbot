@@ -30,22 +30,26 @@ var wikiCommand = discord.SlashCommandCreate{
 	},
 }
 
-func HandleWiki(e *handler.CommandEvent) error {
-	term := e.SlashCommandInteractionData().String("term")
-	eb := discord.NewEmbedBuilder()
+func WikiText(e *handler.CommandEvent, term string) []byte {
 	wiki := mediawiki.NewWikiService()
 	text, err := wiki.Json("TreasureCard:" + term)
 	if err != nil {
-		eb.SetDescription("Error: " + err.Error())
-		return Respond(e, eb)
+		return nil
 	}
-	var ctx WikiContext
-	err = json.Unmarshal(text, &ctx)
-	if err != nil {
-		HandleError(eb, err)
-		return Respond(e, eb)
-	}
+	return text
+}
 
+func WikiContent(e *handler.CommandEvent, term string) (WikiContext, error) {
+	var ctx WikiContext
+	err := json.Unmarshal(WikiText(e, term), &ctx)
+	if err != nil {
+		return WikiContext{}, err
+	}
+	return ctx, nil
+}
+
+func BuildWikiEmbed(e *handler.CommandEvent, ctx WikiContext) *discord.EmbedBuilder {
+	eb := discord.NewEmbedBuilder()
 	eb.SetTitle(ctx.Name)
 	eb.SetImage(ctx.Image)
 	eb.AddFields(
@@ -66,8 +70,16 @@ func HandleWiki(e *handler.CommandEvent) error {
 			Value: ctx.PvPlevel,
 		},
 	)
+	return eb
+}
 
-	return Respond(e, eb)
+func HandleWiki(e *handler.CommandEvent) error {
+	term := e.SlashCommandInteractionData().String("term")
+	context, err := WikiContent(e, term)
+	if err != nil {
+		return Respond(e, HandleError(err))
+	}
+	return Respond(e, BuildWikiEmbed(e, context))
 }
 
 func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) error {
@@ -77,7 +89,8 @@ func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) error {
 	)
 }
 
-func HandleError(eb *discord.EmbedBuilder, err error) *discord.EmbedBuilder {
+func HandleError(err error) *discord.EmbedBuilder {
+	eb := discord.NewEmbedBuilder()
 	eb.SetDescription("Error: " + err.Error())
 	eb.SetColor(0xFF0000)
 	return eb
