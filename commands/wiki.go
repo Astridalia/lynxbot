@@ -54,15 +54,16 @@ func HandleWiki(e *handler.CommandEvent) error {
 
 func Respond(e *handler.CommandEvent, eb *discord.EmbedBuilder) func(err error) error {
 	return func(err error) error {
+		builder := discord.NewMessageCreateBuilder().SetEphemeral(true)
+		responseType := discord.InteractionResponseTypeCreateMessage
 		if err != nil {
-			return e.Respond(
-				discord.InteractionResponseTypeCreateMessage,
-				discord.NewMessageCreateBuilder().SetEphemeral(true).SetContent(err.Error()).Build(),
-			)
+			builder.SetContent(err.Error())
+		} else {
+			builder.SetEmbeds(eb.Build())
 		}
 		return e.Respond(
-			discord.InteractionResponseTypeCreateMessage,
-			discord.NewMessageCreateBuilder().SetEmbeds(eb.Build()).SetEphemeral(true).Build(),
+			responseType,
+			builder.Build(),
 		)
 	}
 }
