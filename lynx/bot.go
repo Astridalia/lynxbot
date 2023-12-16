@@ -2,6 +2,7 @@ package lynx
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -11,8 +12,10 @@ import (
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/cache"
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/gin-gonic/gin"
 )
 
@@ -75,4 +78,36 @@ func (b *Bot) Shutdown() {
 	log.Println("Shutting down bot...")
 	b.Client.Close(context.Background())
 	os.Exit(0)
+}
+
+func (b *Bot) SyncCommands(commands []discord.ApplicationCommandCreate, guildIDs ...snowflake.ID) {
+	restClient := b.Client.Rest()
+	appID := b.Client.ApplicationID()
+
+	// Common function to set commands
+	setCommands := func(id snowflake.ID, global bool) {
+		var err error
+		if global {
+			_, err = restClient.SetGlobalCommands(appID, commands)
+		} else {
+			_, err = restClient.SetGuildCommands(appID, id, commands)
+		}
+		if err != nil {
+			log.Fatalf("failed to set commands%s: %s", func() string {
+				if global {
+					return " globally"
+				}
+				return fmt.Sprintf(" for guild %s", id)
+			}(), err)
+		}
+	}
+
+	// Determine whether to set global or guild-specific commands
+	if len(guildIDs) == 0 {
+		setCommands(0, true) // Set global commands
+	} else {
+		for _, guildID := range guildIDs {
+			setCommands(guildID, false) // Set guild-specific commands
+		}
+	}
 }
