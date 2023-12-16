@@ -31,9 +31,7 @@ func main() {
 	if !exists {
 		panic("SERVER_ID environment variable not set")
 	}
-
 	bot.SyncCommands(commands.Commands, []snowflake.ID{snowflake.MustParse(server_id)}...)
-
 	RegisterCommandHandlers(router, bot)
 	go bot.StartAndBlock()
 	err = ginEngine.Run(":8080")
@@ -44,4 +42,5 @@ func main() {
 
 func RegisterCommandHandlers(cr handler.Router, b *lynx.Bot) {
 	cr.Command("/ping", commands.HandlePing)
+	cr.Command("/wiki", commands.HandleWiki)
 }

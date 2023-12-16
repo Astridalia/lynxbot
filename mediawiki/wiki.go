@@ -74,10 +74,10 @@ func (s *WikiService) wikiText(body []byte) (*WikiResponse, error) {
 }
 
 // Json converts the infobox in the WikiText content to a JSON string.
-func (s *WikiService) Json(pageID string) (string, error) {
+func (s *WikiService) Json(pageID string) ([]byte, error) {
 	wiki, err := s.WikiText(pageID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	header := FindHeader(wiki.Parser.WikiText)
@@ -86,16 +86,22 @@ func (s *WikiService) Json(pageID string) (string, error) {
 
 	imageURL, err := s.GetImageURL(pageID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+
+	re := regexp.MustCompile(`:\s*([^,]+)`)
+	matches := re.FindStringSubmatch(pageID)
+
+	data["name"] = matches[1]
+
 	data["image"] = imageURL
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return string(jsonData), nil
+	return jsonData, nil
 }
 
 // GetImageURL returns the URL of the specified image.
