@@ -69,9 +69,8 @@ func (b *Bot) StartAndBlock() {
 	log.Println("Bot is running... Press Ctrl-C to exit.")
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-s
-
 	defer b.Shutdown()
+	<-s
 }
 
 func (b *Bot) Shutdown() {
