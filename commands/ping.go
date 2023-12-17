@@ -35,9 +35,5 @@ func HandlePing(e *handler.CommandEvent) error {
 			e.Client().Logger().Error("Failed to update ping embed: ", err)
 		}
 	}()
-
-	return e.Respond(discord.InteractionResponseTypeCreateMessage, discord.NewMessageCreateBuilder().
-		SetEmbeds(eb.Build()).
-		Build(),
-	)
+	return Respond(e, eb)(nil)
 }
