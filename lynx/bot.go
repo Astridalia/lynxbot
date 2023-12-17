@@ -80,34 +80,21 @@ func (b *Bot) Shutdown() {
 	os.Exit(0)
 }
 
-func (b *Bot) SyncCommands(commands []discord.ApplicationCommandCreate, guildIDs ...snowflake.ID) {
+func (b *Bot) SyncCommands(commands []discord.ApplicationCommandCreate, guildIDs ...snowflake.ID) error {
 	restClient := b.Client.Rest()
 	appID := b.Client.ApplicationID()
 
-	// Common function to set commands
-	setCommands := func(id snowflake.ID, global bool) {
-		var err error
-		if global {
-			_, err = restClient.SetGlobalCommands(appID, commands)
-		} else {
-			_, err = restClient.SetGuildCommands(appID, id, commands)
-		}
-		if err != nil {
-			log.Fatalf("failed to set commands%s: %s", func() string {
-				if global {
-					return " globally"
-				}
-				return fmt.Sprintf(" for guild %s", id)
-			}(), err)
+	if len(guildIDs) == 0 {
+		if _, err := restClient.SetGlobalCommands(appID, commands); err != nil {
+			return fmt.Errorf("failed to set global commands: %w", err)
 		}
 	}
 
-	// Determine whether to set global or guild-specific commands
-	if len(guildIDs) == 0 {
-		setCommands(0, true) // Set global commands
-	} else {
-		for _, guildID := range guildIDs {
-			setCommands(guildID, false) // Set guild-specific commands
+	for _, id := range guildIDs {
+		if _, err := restClient.SetGuildCommands(appID, id, commands); err != nil {
+			return fmt.Errorf("failed to set commands for guild %s: %w", id, err)
 		}
 	}
+
+	return nil
 }
