@@ -19,6 +19,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const botIntents = gateway.IntentGuildMessages |
+	gateway.IntentDirectMessages |
+	gateway.IntentGuildMessageTyping |
+	gateway.IntentDirectMessageTyping
+
 type Bot struct {
 	Token  string
 	Client bot.Client
@@ -41,14 +46,9 @@ func (b *Bot) clientConfigurator(r handler.Router) []bot.ConfigOpt {
 	return []bot.ConfigOpt{
 		bot.WithEventListeners(r),
 		bot.WithGatewayConfigOpts(
-			gateway.WithIntents(gateway.IntentGuildMessages|
-				gateway.IntentDirectMessages|
-				gateway.IntentGuildMessageTyping|
-				gateway.IntentDirectMessageTyping,
-			),
+			gateway.WithIntents(botIntents),
 			gateway.WithCompress(true),
 		),
-
 		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds)),
 	}
 }
