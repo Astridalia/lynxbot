@@ -10,10 +10,10 @@ import (
 )
 
 type Parser struct {
-	Title    string   `json:"title"`
-	PageId   int64    `json:"pageid"`
-	Images   []string `json:"images"`
-	WikiText string   `json:"wikitext"`
+	Title    string   `json:"title,omitempty"`
+	PageId   int64    `json:"pageid,omitempty"`
+	Images   []string `json:"images,omitempty"`
+	WikiText string   `json:"wikitext,omitempty"`
 }
 
 type WikiResponse struct {
@@ -75,29 +75,51 @@ func (s *WikiService) Json(pageID string) (bytes []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	header := FindHeader(wiki.Parser.WikiText)
 	infobox := ReplaceInfoboxHeader(wiki.Parser.WikiText, header)
 	data := extractKeyValuePairs(infobox)
+	data["name"] = s.AppendName(data, pageID)(err)
+	data["image"] = s.GetImageURLFunc(data, pageID)(err)
+	return s.JsonMarshal(data)(err), nil
+}
 
-	imageURL, err := s.GetImageURL(pageID)
-	if err != nil {
-		return nil, err
+func (s *WikiService) AppendName(data map[string]string, pageID string) func(error) string {
+	return func(err error) string {
+		if err != nil {
+			log.Printf("error getting image URL: %s", err)
+		}
+		re := regexp.MustCompile(`:\s*([^,]+)`)
+		matches := re.FindStringSubmatch(pageID)
+		data["name"] = matches[1]
+		return matches[1]
 	}
+}
 
-	re := regexp.MustCompile(`:\s*([^,]+)`)
-	matches := re.FindStringSubmatch(pageID)
-
-	data["name"] = matches[1]
-
-	data["image"] = imageURL
-
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
+func (s *WikiService) GetImageURLFunc(data map[string]string, pageID string) func(error) string {
+	return func(err error) string {
+		if err != nil {
+			log.Printf("error getting image URL: %s", err)
+		}
+		imageURL, err := s.GetImageURL(pageID)
+		if err != nil {
+			log.Printf("error getting image URL: %s", err)
+		}
+		data["image"] = imageURL
+		return imageURL
 	}
+}
 
-	return jsonData, nil
+func (s *WikiService) JsonMarshal(data map[string]string) func(error) []byte {
+	return func(err error) []byte {
+		if err != nil {
+			log.Printf("error marshaling JSON: %s", err)
+		}
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			log.Printf("error marshaling JSON: %s", err)
+		}
+		return bytes
+	}
 }
 
 // GetImageURL returns the URL of the specified image.
