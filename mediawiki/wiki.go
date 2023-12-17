@@ -44,14 +44,14 @@ func (s *WikiService) WikiText(pageID string) (WikiResponse, error) {
 		return WikiResponse{}, err
 	}
 	defer http.Body.Close()
-	api, err := s.wikiText(BodyReader(http.Body))
+	api, err := s.wikiText(bodyReader(http.Body))
 	if err != nil {
 		return WikiResponse{}, err
 	}
 	return *api, nil
 }
 
-func BodyReader(body io.ReadCloser) []byte {
+func bodyReader(body io.ReadCloser) []byte {
 	bodyBytes, err := io.ReadAll(body)
 	if err != nil {
 		return []byte{}
@@ -134,7 +134,6 @@ func (s *WikiService) GetImageURL(pageID string) (string, error) {
 	default:
 		PageIdParser = pageID
 	}
-
 	return s.getHeader(apiImageRedirect, PageIdParser), nil
 }
 
