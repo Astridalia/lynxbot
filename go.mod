@@ -4,6 +4,7 @@ go 1.21.5
 
 require (
 	github.com/DaRealFreak/cloudflare-bp-go v1.0.4
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/disgoorg/disgo v0.17.0
 	github.com/disgoorg/snowflake/v2 v2.0.1
 	github.com/gin-gonic/gin v1.9.1
@@ -12,7 +13,6 @@ require (
 
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0 // indirect
-	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/bytedance/sonic v1.10.2 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
