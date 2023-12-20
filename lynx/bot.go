@@ -22,7 +22,8 @@ import (
 const botIntents = gateway.IntentGuildMessages |
 	gateway.IntentDirectMessages |
 	gateway.IntentGuildMessageTyping |
-	gateway.IntentDirectMessageTyping
+	gateway.IntentDirectMessageTyping |
+	gateway.IntentGuildMembers
 
 type Bot struct {
 	Token  string
@@ -49,7 +50,7 @@ func (b *Bot) clientConfigurator(r handler.Router) []bot.ConfigOpt {
 			gateway.WithIntents(botIntents),
 			gateway.WithCompress(true),
 		),
-		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds)),
+		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds | cache.FlagMembers | cache.FlagThreadMembers)),
 	}
 }
 

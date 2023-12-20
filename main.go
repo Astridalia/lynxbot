@@ -43,4 +43,5 @@ func main() {
 func RegisterCommandHandlers(cr handler.Router, b *lynx.Bot) {
 	cr.Command("/ping", commands.HandlePing)
 	cr.Command("/wiki", commands.HandleWiki)
+	cr.Command("/random", commands.HandleRandomizer)
 }
